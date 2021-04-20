@@ -16,63 +16,66 @@ namespace assembly_sim {
   // Convert pose types
   void to_kdl(const sdf::ElementPtr &pose_elem, KDL::Frame &frame)
   {
-    sdf::Pose pose;
+    ignition::math::Pose3d pose;
     pose_elem->GetValue()->Get(pose);
 
     //std::string pose_str;
     //pose_elem->GetValue()->Get(pose_str);
 
     frame = KDL::Frame(
-        KDL::Rotation::Quaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w),
-        KDL::Vector(pose.pos.x, pose.pos.y, pose.pos.z));
+        KDL::Rotation::Quaternion(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W()),
+        KDL::Vector(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()));
 
     //gzwarn<<"string of joint pose: "<<pose_str<<std::endl<<frame<<std::endl;
   }
 
-  void to_kdl(const gazebo::math::Pose &pose, KDL::Frame &frame)
+  void to_kdl(const ignition::math::Pose3d &pose, KDL::Frame &frame)
   {
     frame = KDL::Frame(
-        KDL::Rotation::Quaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w),
-        KDL::Vector(pose.pos.x, pose.pos.y, pose.pos.z));
+        KDL::Rotation::Quaternion(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W()),
+        KDL::Vector(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()));
   }
 
-  void to_kdl(const gazebo::math::Vector3 &vector3, KDL::Vector &vector)
+  void to_kdl(const ignition::math::Vector3d &vector3, KDL::Vector &vector)
   {
-    vector.data[0] = vector3.x;
-    vector.data[1] = vector3.y;
-    vector.data[2] = vector3.z;
+    vector.data[0] = vector3.X();
+    vector.data[1] = vector3.Y();
+    vector.data[2] = vector3.Z();
   }
 
-  void to_tf(const gazebo::math::Pose &pose, tf::Transform &frame)
+  void to_tf(const ignition::math::Pose3d &pose, tf::Transform &frame)
   {
     frame.setRotation( tf::Quaternion(
-            pose.rot.x,
-            pose.rot.y,
-            pose.rot.z,
-            pose.rot.w));
-    frame.setOrigin( tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z) );
+            pose.Rot().X(),
+            pose.Rot().Y(),
+            pose.Rot().Z(),
+            pose.Rot().W()));
+    frame.setOrigin( tf::Vector3(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()) );
   }
 
-  void to_gazebo(const KDL::Frame &frame, gazebo::math::Pose &pose)
+  void to_gazebo(const KDL::Frame &frame, ignition::math::Pose3d &pose)
   {
-    pose = gazebo::math::Pose(
-        gazebo::math::Vector3(frame.p.data[0], frame.p.data[1], frame.p.data[2]),
-        gazebo::math::Quaternion());
-    frame.M.GetQuaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
+    pose = ignition::math::Pose3<double>(
+        ignition::math::Vector3<double>(frame.p.data[0], frame.p.data[1], frame.p.data[2]),
+        ignition::math::Quaternion<double>());
+    frame.M.GetQuaternion(pose.Rot().X(),
+                          pose.Rot().Y(),
+                          pose.Rot().Z(),
+                          pose.Rot().W());
   }
 
-  void to_gazebo(const KDL::Wrench &wrench, gazebo::math::Vector3 &force, gazebo::math::Vector3 &torque)
+  void to_gazebo(const KDL::Wrench &wrench, ignition::math::Vector3d &force, ignition::math::Vector3d &torque)
   {
-    force.x = wrench.force.x();
-    force.y = wrench.force.y();
-    force.z = wrench.force.z();
+    force.X(wrench.force.x());
+    force.Y(wrench.force.y());
+    force.Z(wrench.force.z());
 
-    torque.x = wrench.torque.x();
-    torque.y = wrench.torque.y();
-    torque.z = wrench.torque.z();
+    torque.X(wrench.torque.x());
+    torque.Y(wrench.torque.y());
+    torque.Z(wrench.torque.z());
   }
 
-  void to_eigen(const gazebo::math::Vector3 &vector3, Eigen::Vector3d &vector3d) {
+  void to_eigen(const ignition::math::Vector3d &vector3, Eigen::Vector3d &vector3d) {
     for(int i=0; i<3; i++) {
       vector3d[i] = vector3[i];
     }

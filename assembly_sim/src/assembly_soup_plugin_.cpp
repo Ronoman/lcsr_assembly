@@ -44,42 +44,42 @@ static void to_kdl(const sdf::ElementPtr &pose_elem, KDL::Frame &frame)
   //pose_elem->GetValue()->Get(pose_str);
 
   frame = KDL::Frame(
-      KDL::Rotation::Quaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w),
-      KDL::Vector(pose.pos.x, pose.pos.y, pose.pos.z));
+      KDL::Rotation::Quaternion(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W()),
+      KDL::Vector(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()));
 
   //gzwarn<<"string of joint pose: "<<pose_str<<std::endl<<frame<<std::endl;
 }
 
-static void to_kdl(const gazebo::math::Pose &pose, KDL::Frame &frame)
+static void to_kdl(const ignition::math::Pose3d &pose, KDL::Frame &frame)
 {
   frame = KDL::Frame(
-      KDL::Rotation::Quaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w),
-      KDL::Vector(pose.pos.x, pose.pos.y, pose.pos.z));
+      KDL::Rotation::Quaternion(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W()),
+      KDL::Vector(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()));
 }
 
-static void to_kdl(const gazebo::math::Vector3 &vector3, KDL::Vector &vector)
+static void to_kdl(const ignition::math::Vector3d &vector3, KDL::Vector &vector)
 {
-  vector.data[0] = vector3.x;
-  vector.data[1] = vector3.y;
-  vector.data[2] = vector3.z;
+  vector.data[0] = vector3.X();
+  vector.data[1] = vector3.Y();
+  vector.data[2] = vector3.Z();
 }
 
-static void to_tf(const gazebo::math::Pose &pose, tf::Transform &frame)
+static void to_tf(const ignition::math::Pose3d &pose, tf::Transform &frame)
 {
   frame.setRotation( tf::Quaternion(
-          pose.rot.x,
-          pose.rot.y,
-          pose.rot.z,
-          pose.rot.w));
-  frame.setOrigin( tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z) );
+          pose.Rot().X(),
+          pose.Rot().Y(),
+          pose.Rot().Z(),
+          pose.Rot().W()));
+  frame.setOrigin( tf::Vector3(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()) );
 }
 
-static void to_gazebo(const KDL::Frame &frame, gazebo::math::Pose &pose)
+static void to_gazebo(const KDL::Frame &frame, ignition::math::Pose3d &pose)
 {
-  pose = gazebo::math::Pose(
-      gazebo::math::Vector3(frame.p.data[0], frame.p.data[1], frame.p.data[2]),
-      gazebo::math::Quaternion());
-  frame.M.GetQuaternion(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
+  pose = ignition::math::Pose3d(
+      ignition::math::Vector3d(frame.p.data[0], frame.p.data[1], frame.p.data[2]),
+      ignition::math::Quaternion());
+  frame.M.GetQuaternion(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W());
 }
 
 // Complete an SDF xml snippet into a model
@@ -125,9 +125,9 @@ namespace assembly_sim
     mate_model->joint_template->GetAttribute("type")->Get(joint_type);
 
     // Customize the joint sdf template
-    joint_sdf = boost::make_shared<sdf::Element>();
+    joint_sdf = std::make_shared<sdf::Element>();
     joint_sdf->Copy(mate_model->joint_template);
-    joint_sdf->GetAttribute("name")->Set(
+    joint_sdf->GetParam("name")->Set(
         str( boost::format("%s_m%0d_to_%s_m%0d")
              % female_atom->link->GetName()
              % female_mate_point->id
@@ -136,14 +136,14 @@ namespace assembly_sim
     joint_sdf->GetElement("parent")->GetValue()->Set(female_atom->link->GetName());
     joint_sdf->GetElement("child")->GetValue()->Set(male_atom->link->GetName());
 
-    gazebo::math::Pose pose;
+    ignition::math::Pose3d pose;
     to_gazebo(male_mate_point->pose, pose);
     joint_sdf->GetElement("pose")->GetValue()->Set(pose);
 
     //gzwarn<<"joint sdf:\n\n"<<joint_sdf->ToString(">>")<<std::endl;
 
     // Construct the actual joint between these two atom links
-    joint = gazebo_model->GetWorld()->GetPhysicsEngine()->CreateJoint(joint_type, gazebo_model);
+    joint = gazebo_model->GetWorld()->Physics()->CreateJoint(joint_type, gazebo_model);
     joint->SetModel(gazebo_model);
 
     // Load joint description from SDF
@@ -230,9 +230,9 @@ namespace assembly_sim
       // Determine the type of mate model
       MateModelPtr mate_model;
       if(model == "proximity") {
-        mate_model = boost::make_shared<ProximityMateModel>();
+        mate_model = std::make_shared<ProximityMateModel>();
       } else if(model == "dipole") {
-        mate_model = boost::make_shared<DipoleMateModel>();
+        mate_model = std::make_shared<DipoleMateModel>();
       } else {
         gzerr<<"ERROR: \""<<model<<"\" is not a valid model type"<<std::endl;
         return;
@@ -248,10 +248,10 @@ namespace assembly_sim
       }
 
       // Get the mate template joint
-      mate_model->joint_template_sdf = boost::make_shared<sdf::SDF>();
+      mate_model->joint_template_sdf = std::make_shared<sdf::SDF>();
       sdf::init(sdf::SDFPtr(mate_model->joint_template_sdf));
       sdf::readString(complete_sdf(mate_elem->GetElement("joint")->ToString("")), mate_model->joint_template_sdf);
-      mate_model->joint_template = mate_model->joint_template_sdf->root->GetElement("model")->GetElement("joint");
+      mate_model->joint_template = mate_model->joint_template_sdf->Root()->GetElement("model")->GetElement("joint");
 
       // Get the mate symmetries
       sdf::ElementPtr symmetry_elem = mate_elem->GetElement("symmetry");
@@ -261,21 +261,21 @@ namespace assembly_sim
 
         if(rot_elem)
         {
-          sdf::Vector3 rot_symmetry;
+          ignition::math::Vector3d rot_symmetry;
           rot_elem->GetValue()->Get(rot_symmetry);
 
           // compute symmetries
-          const double x_step = M_PI*2.0/rot_symmetry.x;
-          const double y_step = M_PI*2.0/rot_symmetry.y;
-          const double z_step = M_PI*2.0/rot_symmetry.z;
+          const double x_step = M_PI*2.0/rot_symmetry.X();
+          const double y_step = M_PI*2.0/rot_symmetry.Y();
+          const double z_step = M_PI*2.0/rot_symmetry.Z();
 
-          for(double ix=0; ix < rot_symmetry.x; ix++)
+          for(double ix=0; ix < rot_symmetry.X(); ix++)
           {
             KDL::Rotation Rx = KDL::Rotation::RotX(ix * x_step);
-            for(double iy=0; iy < rot_symmetry.y; iy++)
+            for(double iy=0; iy < rot_symmetry.Y(); iy++)
             {
               KDL::Rotation Ry = KDL::Rotation::RotY(iy * y_step);
-              for(double iz=0; iz < rot_symmetry.z; iz++)
+              for(double iz=0; iz < rot_symmetry.Z(); iz++)
               {
                 KDL::Rotation Rz = KDL::Rotation::RotZ(iz * z_step);
                 mate_model->symmetries.push_back(KDL::Frame(Rx*Ry*Rz, KDL::Vector(0,0,0)));
@@ -306,7 +306,7 @@ namespace assembly_sim
     while(atom_elem && atom_elem->GetName() == "atom_model")
     {
       // Create a new atom
-      AtomModelPtr atom_model = boost::make_shared<AtomModel>();
+      AtomModelPtr atom_model = std::make_shared<AtomModel>();
       atom_elem->GetAttribute("type")->Get(atom_model->type);
 
       // Get the atom mate points
@@ -331,7 +331,7 @@ namespace assembly_sim
               pose_it != mate_model->symmetries.end();
               ++pose_it)
           {
-            mate_point = boost::make_shared<MatePoint>();
+            mate_point = std::make_shared<MatePoint>();
             mate_point->model = mate_model;
             mate_point->pose = base_pose * (*pose_it);
             mate_point->id =
@@ -343,7 +343,7 @@ namespace assembly_sim
             atom_model->female_mate_points.push_back(mate_point);
           }
         } else if(boost::iequals(gender, "male")) {
-          mate_point = boost::make_shared<MatePoint>();
+          mate_point = std::make_shared<MatePoint>();
           mate_point->model = mate_model;
           mate_point->pose = base_pose;
             mate_point->id =
@@ -375,7 +375,7 @@ namespace assembly_sim
         ++it)
     {
       // Create new atom
-      AtomPtr atom = boost::make_shared<Atom>();
+      AtomPtr atom = std::make_shared<Atom>();
       atom->link = *it;
 
       // Determine the atom type from the link name
@@ -414,7 +414,7 @@ namespace assembly_sim
 
       // Get the female atom frame
       KDL::Frame female_atom_frame;
-      to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+      to_kdl(female_atom->link->WorldPose(), female_atom_frame);
 
       // Construct some names for use with TF
       const std::string atom_name = str(
@@ -436,7 +436,7 @@ namespace assembly_sim
         visualization_msgs::MarkerArray female_mate_markers;
 
         // Broadcast a tf frame for this link
-        to_tf(female_atom->link->GetWorldPose(), tf_frame);
+        to_tf(female_atom->link->WorldPose(), tf_frame);
         br.sendTransform(
             tf::StampedTransform(
                 tf_frame,
@@ -541,7 +541,7 @@ namespace assembly_sim
           if(male_atom == female_atom) { continue; }
 
           KDL::Frame male_atom_frame;
-          to_kdl(male_atom->link->GetWorldPose(), male_atom_frame);
+          to_kdl(male_atom->link->WorldPose(), male_atom_frame);
 
           // Iterate over all male mate points of male link
           for(std::vector<MatePointPtr>::iterator it_mmp = male_atom->model->male_mate_points.begin();
@@ -563,7 +563,7 @@ namespace assembly_sim
               // This female mate point needs to be added
               std::cout<<"adding female"<<std::endl;
               mate_point_map_t mate_point_map;
-              mate = boost::make_shared<Mate>(
+              mate = std::make_shared<Mate>(
                   model_,
                   female_mate_point,
                   male_mate_point,
@@ -577,7 +577,7 @@ namespace assembly_sim
             {
               // This male mate point needs to be added
               std::cout<<"adding male"<<std::endl;
-              mate = boost::make_shared<Mate>(
+              mate = std::make_shared<Mate>(
                   model_,
                   female_mate_point,
                   male_mate_point,
@@ -600,14 +600,14 @@ namespace assembly_sim
             if (broadcast_tf_ and mate->joint->GetParent() and mate->joint->GetChild())
             {
               tf::Transform tf_joint_frame;
-              //to_kdl(male_atom->link->GetWorldPose() * mate->joint->GetInitialAnchorPose(), tf_frame);
-              //to_tf(mate->joint->GetWorldPose(), tf_frame);
+              //to_kdl(male_atom->link->WorldPose() * mate->joint->InitialAnchorPose(), tf_frame);
+              //to_tf(mate->joint->WorldPose(), tf_frame);
 
-              gazebo::math::Vector3 anchor = mate->joint->GetAnchor(0);
+              ignition::math::Vector3d anchor = mate->joint->Anchor(0);
 
               KDL::Frame joint_frame = KDL::Frame(
                   male_mate_frame.M,
-                  KDL::Vector(anchor.x, anchor.y, anchor.z));
+                  KDL::Vector(anchor.X(), anchor.Y(), anchor.Z()));
               tf::poseKDLToTF(joint_frame, tf_joint_frame);
 
               br.sendTransform(

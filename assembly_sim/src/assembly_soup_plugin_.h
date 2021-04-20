@@ -22,12 +22,12 @@ namespace assembly_sim {
   struct MatePoint;
   struct Atom;
 
-  typedef boost::shared_ptr<MateModel> MateModelPtr;
-  typedef boost::shared_ptr<AtomModel> AtomModelPtr;
+  typedef std::shared_ptr<MateModel> MateModelPtr;
+  typedef std::shared_ptr<AtomModel> AtomModelPtr;
 
-  typedef boost::shared_ptr<Mate> MatePtr;
-  typedef boost::shared_ptr<MatePoint> MatePointPtr;
-  typedef boost::shared_ptr<Atom> AtomPtr;
+  typedef std::shared_ptr<Mate> MatePtr;
+  typedef std::shared_ptr<MatePoint> MatePointPtr;
+  typedef std::shared_ptr<Atom> AtomPtr;
 
   // The model for how a mate behaves
   struct MateModel
@@ -38,7 +38,7 @@ namespace assembly_sim {
     std::vector<KDL::Frame> symmetries;
 
     // The sdf template for the joint to be created
-    boost::shared_ptr<sdf::SDF> joint_template_sdf;
+    std::shared_ptr<sdf::SDF> joint_template_sdf;
     sdf::ElementPtr joint_template;
 
     // Load parameters from SDF
@@ -101,11 +101,11 @@ namespace assembly_sim {
       MatePointPtr &male_mate_point = mate->male_mate_point;
 
       KDL::Frame female_atom_frame;
-      to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+      to_kdl(female_atom->link->WorldPose(), female_atom_frame);
       KDL::Frame female_mate_frame = female_atom_frame * female_mate_point->pose;
 
       KDL::Frame male_atom_frame;
-      to_kdl(male_atom->link->GetWorldPose(), male_atom_frame);
+      to_kdl(male_atom->link->WorldPose(), male_atom_frame);
       // Compute the world pose of the male mate frame
       // This takes into account the attachment displacement (anchor_offset)
       KDL::Frame male_mate_frame = male_atom_frame * male_mate_point->pose * mate->anchor_offset;
@@ -149,22 +149,22 @@ namespace assembly_sim {
     {
       // Get the male atom frame
       KDL::Frame male_atom_frame;
-      to_kdl(mate->male->link->GetWorldPose(), male_atom_frame);
+      to_kdl(mate->male->link->WorldPose(), male_atom_frame);
 
       // attach two atoms via joint
       mate->joint->Attach(mate->female->link, mate->male->link);
 
       // get the location of the joint in the child (male atom) frame, as specified by the SDF
       KDL::Frame initial_anchor_frame, actual_anchor_frame;
-      to_kdl(mate->joint->GetInitialAnchorPose(), initial_anchor_frame);
+      to_kdl(mate->joint->InitialAnchorPose(), initial_anchor_frame);
       actual_anchor_frame = male_atom_frame*initial_anchor_frame;
 
       // Set the anchor position (location of the joint)
       // This is in the WORLD frame
       // IMPORTANT: This avoids injecting energy into the system in the form of a constraint violation
-      gazebo::math::Pose actual_anchor_pose;
+      ignition::math::Pose3d actual_anchor_pose;
       to_gazebo(actual_anchor_frame, actual_anchor_pose);
-      mate->joint->SetAnchor(0, actual_anchor_pose.pos);
+      mate->joint->SetAnchor(0, actual_anchor_pose.Pos());
 
       // Save the anchor offset (mate point to anchor)
       mate->anchor_offset = (
@@ -236,11 +236,11 @@ namespace assembly_sim {
       MatePointPtr &male_mate_point = mate->male_mate_point;
 
       KDL::Frame female_atom_frame;
-      to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+      to_kdl(female_atom->link->WorldPose(), female_atom_frame);
       KDL::Frame female_mate_frame = female_atom_frame * female_mate_point->pose;
 
       KDL::Frame male_atom_frame;
-      to_kdl(male_atom->link->GetWorldPose(), male_atom_frame);
+      to_kdl(male_atom->link->WorldPose(), male_atom_frame);
       // Compute the world pose of the male mate frame
       // This takes into account the attachment displacement (anchor_offset)
       KDL::Frame male_mate_frame = male_atom_frame * male_mate_point->pose * mate->anchor_offset;
@@ -308,7 +308,7 @@ namespace assembly_sim {
     std::vector<MatePointPtr> male_mate_points;
 
     // The sdf for the link to be created for this atom
-    boost::shared_ptr<sdf::SDF> link_template_sdf;
+    std::shared_ptr<sdf::SDF> link_template_sdf;
     sdf::ElementPtr link_template;
   };
 

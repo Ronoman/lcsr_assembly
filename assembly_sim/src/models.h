@@ -18,13 +18,13 @@ namespace assembly_sim {
   struct MatePoint;
   struct Atom;
 
-  typedef boost::shared_ptr<MateModel> MateModelPtr;
-  typedef boost::shared_ptr<AtomModel> AtomModelPtr;
+  typedef std::shared_ptr<MateModel> MateModelPtr;
+  typedef std::shared_ptr<AtomModel> AtomModelPtr;
 
-  typedef boost::shared_ptr<Mate> MatePtr;
-  typedef boost::shared_ptr<MatePoint> MatePointPtr;
-  typedef boost::shared_ptr<MateFactoryBase> MateFactoryBasePtr;
-  typedef boost::shared_ptr<Atom> AtomPtr;
+  typedef std::shared_ptr<Mate> MatePtr;
+  typedef std::shared_ptr<MatePoint> MatePointPtr;
+  typedef std::shared_ptr<MateFactoryBase> MateFactoryBasePtr;
+  typedef std::shared_ptr<Atom> AtomPtr;
 
   // The model for a type of mate
   struct MateModel
@@ -36,10 +36,10 @@ namespace assembly_sim {
       mate_elem(mate_elem_)
     {
       // Get the mate template joint
-      joint_template_sdf = boost::make_shared<sdf::SDF>();
+      joint_template_sdf = std::make_shared<sdf::SDF>();
       sdf::init(sdf::SDFPtr(joint_template_sdf));
       sdf::readString(complete_sdf(mate_elem->GetElement("joint")->ToString("")), joint_template_sdf);
-      joint_template = joint_template_sdf->root->GetElement("model")->GetElement("joint");
+      joint_template = joint_template_sdf->Root()->GetElement("model")->GetElement("joint");
 
       // Get the mate symmetries
       sdf::ElementPtr symmetry_elem = mate_elem->GetElement("symmetry");
@@ -49,21 +49,21 @@ namespace assembly_sim {
 
         if(rot_elem)
         {
-          sdf::Vector3 rot_symmetry;
+          ignition::math::Vector3d rot_symmetry;
           rot_elem->GetValue()->Get(rot_symmetry);
 
           // compute symmetries
-          const double x_step = M_PI*2.0/rot_symmetry.x;
-          const double y_step = M_PI*2.0/rot_symmetry.y;
-          const double z_step = M_PI*2.0/rot_symmetry.z;
+          const double x_step = M_PI*2.0/rot_symmetry.X();
+          const double y_step = M_PI*2.0/rot_symmetry.Y();
+          const double z_step = M_PI*2.0/rot_symmetry.Z();
 
-          for(double ix=0; ix < rot_symmetry.x; ix++)
+          for(double ix=0; ix < rot_symmetry.X(); ix++)
           {
             KDL::Rotation Rx = KDL::Rotation::RotX(ix * x_step);
-            for(double iy=0; iy < rot_symmetry.y; iy++)
+            for(double iy=0; iy < rot_symmetry.Y(); iy++)
             {
               KDL::Rotation Ry = KDL::Rotation::RotY(iy * y_step);
-              for(double iz=0; iz < rot_symmetry.z; iz++)
+              for(double iz=0; iz < rot_symmetry.Z(); iz++)
               {
                 KDL::Rotation Rz = KDL::Rotation::RotZ(iz * z_step);
                 symmetries.push_back(KDL::Frame(Rx*Ry*Rz, KDL::Vector(0,0,0)));
@@ -88,7 +88,7 @@ namespace assembly_sim {
     sdf::ElementPtr mate_elem;
 
     // The sdf template for the joint to be created
-    boost::shared_ptr<sdf::SDF> joint_template_sdf;
+    std::shared_ptr<sdf::SDF> joint_template_sdf;
     sdf::ElementPtr joint_template;
   };
 
@@ -120,7 +120,7 @@ namespace assembly_sim {
         AtomPtr female_atom,
         AtomPtr male_atom)
     {
-      return boost::make_shared<MateType>(
+      return std::make_shared<MateType>(
           mate_model,
           gazebo_model,
           female_mate_point,
@@ -225,7 +225,7 @@ namespace assembly_sim {
     std::vector<MatePointPtr> male_mate_points;
 
     // The sdf for the link to be created for this atom
-    boost::shared_ptr<sdf::SDF> link_template_sdf;
+    std::shared_ptr<sdf::SDF> link_template_sdf;
     sdf::ElementPtr link_template;
   };
 
@@ -304,7 +304,7 @@ namespace assembly_sim {
         gzerr<<"No detach_threshold / linear / angular elements!"<<std::endl;
       }
 
-      gazebo::math::Vector3 gz_max_force, gz_max_torque;
+      ignition::math::Vector3d gz_max_force, gz_max_torque;
       sdf::ElementPtr max_force_elem = mate_elem->GetElement("max_force");
       if(max_force_elem) {
         max_force_elem->GetValue()->Get(gz_max_force);
@@ -346,8 +346,8 @@ namespace assembly_sim {
       if(female_component.find(this->male->link) == female_component.end()) {
         // Get the atom frames
         KDL::Frame female_atom_frame, male_atom_frame;
-        to_kdl(this->female->link->GetWorldPose(), female_atom_frame);
-        to_kdl(this->male->link->GetWorldPose(), male_atom_frame);
+        to_kdl(this->female->link->WorldPose(), female_atom_frame);
+        to_kdl(this->male->link->WorldPose(), male_atom_frame);
 
         // move one of the atoms into the precise relative position
         KDL::Frame current_root_frame;
@@ -379,13 +379,13 @@ namespace assembly_sim {
 
         KDL::Frame current_component_frame;
         KDL::Frame final_component_frame;
-        gazebo::math::Pose final_component_pose;
+        ignition::math::Pose3d final_component_pose;
 
         for(boost::unordered_set<gazebo::physics::LinkPtr>::iterator it_l = it_l_begin; it_l != it_l_end; ++it_l) {
           gazebo::physics::LinkPtr comp_link =  *it_l;
 
           // Move component
-          to_kdl(comp_link->GetWorldPose(), current_component_frame);
+          to_kdl(comp_link->WorldPose(), current_component_frame);
           final_component_frame = component_transform * current_component_frame;
           to_gazebo(final_component_frame, final_component_pose);
           comp_link->SetWorldPose(final_component_pose);
@@ -401,8 +401,8 @@ namespace assembly_sim {
       gzwarn<<">> mate error (before): "<<this->mate_error.vel.Norm()<<", "<<this->mate_error.rot.Norm()<<std::endl;
       KDL::Frame female_atom_frame, male_atom_frame;
       KDL::Frame female_mate_frame, male_mate_frame;
-      to_kdl(this->female->link->GetWorldPose(), female_atom_frame);
-      to_kdl(this->male->link->GetWorldPose(), male_atom_frame);
+      to_kdl(this->female->link->WorldPose(), female_atom_frame);
+      to_kdl(this->male->link->WorldPose(), male_atom_frame);
       female_mate_frame = female_atom_frame * female_mate_point->pose * (*this->mated_symmetry);
       male_mate_frame = male_atom_frame * male_mate_point->pose;
       this->mate_error = KDL::diff(female_mate_frame, male_mate_frame);
@@ -429,15 +429,15 @@ namespace assembly_sim {
 
       // get the location of the joint in the child (male atom) frame, as specified by the SDF
       KDL::Frame initial_anchor_frame, actual_anchor_frame;
-      to_kdl(this->joint->GetInitialAnchorPose(), initial_anchor_frame);
+      to_kdl(this->joint->InitialAnchorPose(), initial_anchor_frame);
       actual_anchor_frame = male_atom_frame*initial_anchor_frame;
 
       // Set the anchor position (location of the joint)
       // This is in the WORLD frame
       // IMPORTANT: This avoids injecting energy into the system in the form of a constraint violation
-      gazebo::math::Pose actual_anchor_pose;
+      ignition::math::Pose3d actual_anchor_pose;
       to_gazebo(actual_anchor_frame, actual_anchor_pose);
-      this->joint->SetAnchor(0, actual_anchor_pose.pos);
+      this->joint->SetAnchor(0, actual_anchor_pose.Pos());
 
       // Save the anchor offset (mate point to anchor)
       this->anchor_offset = (
@@ -483,10 +483,10 @@ namespace assembly_sim {
       }
 
       KDL::Frame female_atom_frame;
-      to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+      to_kdl(female_atom->link->WorldPose(), female_atom_frame);
 
       KDL::Frame male_atom_frame;
-      to_kdl(male_atom->link->GetWorldPose(), male_atom_frame);
+      to_kdl(male_atom->link->WorldPose(), male_atom_frame);
 
       // Iterate over all symmetric mating positions
       for(std::vector<KDL::Frame>::iterator it_sym = model->symmetries.begin();
@@ -645,7 +645,7 @@ namespace assembly_sim {
 
       while(dipole_elem && dipole_elem->GetName() == "dipole")
       {
-        gazebo::math::Vector3 position_gz, moment_gz;
+        ignition::math::Vector3d position_gz, moment_gz;
         double min_distance;
 
         // Get the position of the dipole
@@ -661,8 +661,8 @@ namespace assembly_sim {
         min_dist_elem->GetValue()->Get(min_distance);
 
         Dipole dipole;
-        dipole.position = KDL::Vector(position_gz.x, position_gz.y, position_gz.z);
-        dipole.moment = KDL::Vector(moment_gz.x, moment_gz.y, moment_gz.z);
+        dipole.position = KDL::Vector(position_gz.X(), position_gz.Y(), position_gz.Z());
+        dipole.moment = KDL::Vector(moment_gz.X(), moment_gz.Y(), moment_gz.Z());
         dipole.min_distance = min_distance;
 
         dipoles.push_back(dipole);
@@ -709,16 +709,16 @@ namespace assembly_sim {
 
       // Compute the world pose of the female mate frame
       KDL::Frame female_atom_frame;
-      to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+      to_kdl(female_atom->link->WorldPose(), female_atom_frame);
       KDL::Frame female_mate_frame = female_atom_frame * female_mate_point->pose;
-      gazebo::math::Pose female_mate_pose;
+      ignition::math::Pose3d female_mate_pose;
       to_gazebo(female_mate_frame, female_mate_pose);
 
       // Compute the world pose of the male mate frame
       KDL::Frame male_atom_frame;
-      to_kdl(male_atom->link->GetWorldPose(), male_atom_frame);
+      to_kdl(male_atom->link->WorldPose(), male_atom_frame);
       KDL::Frame male_mate_frame = male_atom_frame * male_mate_point->pose;
-      gazebo::math::Pose male_mate_pose;
+      ignition::math::Pose3d male_mate_pose;
       to_gazebo(male_mate_frame, male_mate_pose);
 
       // compute twist between the two mate points to determine if we need to simulate dipole interactions
@@ -737,7 +737,7 @@ namespace assembly_sim {
       KDL::Vector m1, m2;
       KDL::Vector B1, B2;
       KDL::Wrench W1, W2;
-      gazebo::math::Vector3 F1gz, F2gz, T1gz, T2gz;
+      ignition::math::Vector3d F1gz, F2gz, T1gz, T2gz;
 
       // update markers
       int marker_id = 0;
@@ -780,7 +780,7 @@ namespace assembly_sim {
         // Compute the moment orientation and position
         female_dipole_frame.M = female_mate_frame.M;
         female_dipole_frame.p = female_mate_frame*it_fdp->position;
-        gazebo::math::Pose female_dipole_pose;
+        ignition::math::Pose3d female_dipole_pose;
         to_gazebo(female_dipole_frame, female_dipole_pose);
         m1 = female_dipole_frame.M * it_fdp->moment;
 
@@ -789,7 +789,7 @@ namespace assembly_sim {
           // Compute the moment orientation and position
           male_dipole_frame.M = male_mate_frame.M;
           male_dipole_frame.p = male_mate_frame*it_mdp->position;
-          gazebo::math::Pose male_dipole_pose;
+          ignition::math::Pose3d male_dipole_pose;
           to_gazebo(male_dipole_frame, male_dipole_pose);
           m2 = male_dipole_frame.M * it_mdp->moment;
 
@@ -833,11 +833,11 @@ namespace assembly_sim {
           to_gazebo(W1, F1gz, T1gz);
           to_gazebo(W2, F2gz, T2gz);
 
-          female_atom->link->AddForceAtWorldPosition(F1gz, female_dipole_pose.pos);
+          female_atom->link->AddForceAtWorldPosition(F1gz, female_dipole_pose.Pos());
           female_atom->link->AddTorque(T1gz);
           female_atom->wrench += W1;
 
-          male_atom->link->AddForceAtWorldPosition(F2gz, male_dipole_pose.pos);
+          male_atom->link->AddForceAtWorldPosition(F2gz, male_dipole_pose.Pos());
           male_atom->link->AddTorque(T2gz);
           male_atom->wrench += W2;
         }

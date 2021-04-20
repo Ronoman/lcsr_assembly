@@ -31,17 +31,17 @@ namespace assembly_sim {
   // Convert geometric types
   void to_kdl(const sdf::ElementPtr &pose_elem, KDL::Frame &frame);
 
-  void to_kdl(const gazebo::math::Pose &pose, KDL::Frame &frame);
+  void to_kdl(const ignition::math::Pose3d &pose, KDL::Frame &frame);
 
-  void to_kdl(const gazebo::math::Vector3 &vector3, KDL::Vector &vector);
+  void to_kdl(const ignition::math::Vector3d &vector3, KDL::Vector &vector);
 
-  void to_tf(const gazebo::math::Pose &pose, tf::Transform &frame);
+  void to_tf(const ignition::math::Pose3d &pose, tf::Transform &frame);
 
-  void to_gazebo(const KDL::Frame &frame, gazebo::math::Pose &pose);
+  void to_gazebo(const KDL::Frame &frame, ignition::math::Pose3d &pose);
 
-  void to_gazebo(const KDL::Wrench &wrench, gazebo::math::Vector3 &force, gazebo::math::Vector3 &torque);
+  void to_gazebo(const KDL::Wrench &wrench, ignition::math::Vector3d &force, ignition::math::Vector3d &torque);
 
-  void to_eigen(const gazebo::math::Vector3 &vector3, Eigen::Vector3d &vector3d);
+  void to_eigen(const ignition::math::Vector3d &vector3, Eigen::Vector3d &vector3d);
 
   // Complete an SDF xml snippet into a model
   std::string complete_sdf(const std::string &incomplete_sdf);

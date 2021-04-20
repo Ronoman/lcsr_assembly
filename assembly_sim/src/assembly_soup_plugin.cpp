@@ -117,15 +117,15 @@ namespace assembly_sim
         gzlog<<"Adding mate model for "<<mate_model_type<<std::endl;
 
         // Store this mate model
-        MateModelPtr mate_model = boost::make_shared<MateModel>(mate_model_type, mate_elem);
+        MateModelPtr mate_model = std::make_shared<MateModel>(mate_model_type, mate_elem);
         mate_models_[mate_model->type] = mate_model;
 
         // Create a mate factory
         MateFactoryBasePtr mate_factory;
         if(model == "proximity") {
-          mate_factory = boost::make_shared<MateFactory<ProximityMate> >(mate_model, model_);
+          mate_factory = std::make_shared<MateFactory<ProximityMate> >(mate_model, model_);
         } else if(model == "dipole") {
-          mate_factory = boost::make_shared<MateFactory<DipoleMate> >(mate_model, model_);
+          mate_factory = std::make_shared<MateFactory<DipoleMate> >(mate_model, model_);
         } else {
           gzerr<<"ERROR: \""<<model<<"\" is not a valid model type"<<std::endl;
           return;
@@ -144,7 +144,7 @@ namespace assembly_sim
     while(atom_elem && atom_elem->GetName() == "atom_model")
     {
       // Create a new atom
-      AtomModelPtr atom_model = boost::make_shared<AtomModel>();
+      AtomModelPtr atom_model = std::make_shared<AtomModel>();
       atom_elem->GetAttribute("type")->Get(atom_model->type);
 
       // Get the atom mate points
@@ -176,7 +176,7 @@ namespace assembly_sim
               pose_it != mate_model->symmetries.end();
               ++pose_it)
           {
-            mate_point = boost::make_shared<MatePoint>();
+            mate_point = std::make_shared<MatePoint>();
             mate_point->model = mate_model;
             mate_point->pose = base_pose * (*pose_it);
             mate_point->id =
@@ -188,7 +188,7 @@ namespace assembly_sim
             atom_model->female_mate_points.push_back(mate_point);
           }
 #else
-          mate_point = boost::make_shared<MatePoint>();
+          mate_point = std::make_shared<MatePoint>();
           mate_point->model = mate_model;
           mate_point->pose = base_pose;
           mate_point->id =
@@ -200,7 +200,7 @@ namespace assembly_sim
           atom_model->female_mate_points.push_back(mate_point);
 #endif
         } else if(boost::iequals(gender, "male")) {
-          mate_point = boost::make_shared<MatePoint>();
+          mate_point = std::make_shared<MatePoint>();
           mate_point->model = mate_model;
           mate_point->pose = base_pose;
           mate_point->id =
@@ -235,7 +235,7 @@ namespace assembly_sim
       gzwarn<<"Creating atom for link: "<<(*it)->GetName()<<std::endl;
 
       // Create new atom
-      AtomPtr atom = boost::make_shared<Atom>();
+      AtomPtr atom = std::make_shared<Atom>();
       atom->link = *it;
 
       // Determine the atom type from the link name
@@ -370,17 +370,17 @@ namespace assembly_sim
       if (broadcast_tf_ and mate->joint->GetParent() and mate->joint->GetChild())
       {
         tf::Transform tf_joint_frame;
-        //to_kdl(male_atom->link->GetWorldPose() * mate->joint->GetInitialAnchorPose(), tf_frame);
-        //to_tf(mate->joint->GetWorldPose(), tf_frame);
+        //to_kdl(male_atom->link->WorldPose() * mate->joint->InitialAnchorPose(), tf_frame);
+        //to_tf(mate->joint->WorldPose(), tf_frame);
 
-        gazebo::math::Vector3 anchor = mate->joint->GetAnchor(0);
+        ignition::math::Vector3d anchor = mate->joint->Anchor(0);
 
         KDL::Frame male_atom_frame;
-        to_kdl(mate->male->link->GetWorldPose(), male_atom_frame);
+        to_kdl(mate->male->link->WorldPose(), male_atom_frame);
         KDL::Frame male_mate_frame = male_atom_frame * mate->male_mate_point->pose * mate->anchor_offset;
         KDL::Frame joint_frame = KDL::Frame(
             male_mate_frame.M,
-            KDL::Vector(anchor.x, anchor.y, anchor.z));
+            KDL::Vector(anchor.X(), anchor.Y(), anchor.Z()));
         tf::poseKDLToTF(joint_frame, tf_joint_frame);
 
         br.sendTransform(
@@ -412,7 +412,7 @@ namespace assembly_sim
         
         // Get the female atom frame
         KDL::Frame female_atom_frame;
-        to_kdl(female_atom->link->GetWorldPose(), female_atom_frame);
+        to_kdl(female_atom->link->WorldPose(), female_atom_frame);
 
         for (boost::unordered_set<MatePtr>::iterator it = mates_.begin();
              it != mates_.end();
@@ -457,7 +457,7 @@ namespace assembly_sim
         tf::Transform tf_frame;
 
         // Broadcast a tf frame for this link
-        to_tf(female_atom->link->GetWorldPose(), tf_frame);
+        to_tf(female_atom->link->WorldPose(), tf_frame);
         br.sendTransform(
             tf::StampedTransform(
                 tf_frame,
@@ -565,16 +565,16 @@ namespace assembly_sim
     gazebo::physics::WorldPtr world = this->model_->GetWorld();
     gazebo::common::Time now(0);
     gazebo::common::Time update_period(1.0/updates_per_second_);
-    gazebo::common::Time last_update_time = world->GetSimTime();
+    gazebo::common::Time last_update_time = world->SimTime();
 
     while(running_) {
 
-      now = world->GetSimTime();
+      now = world->SimTime();
 
       if(now < last_update_time + update_period) {
         gazebo::common::Time::Sleep(last_update_time + update_period - now);
       } else {
-        last_update_time = world->GetSimTime();
+        last_update_time = world->SimTime();
         this->queueStateUpdates();
       }
     }

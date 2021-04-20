@@ -41,7 +41,7 @@ namespace assembly_sim {
     model->joint_template->GetAttribute("type")->Get(joint_type);
 
     // Customize the joint sdf template
-    joint_sdf = boost::make_shared<sdf::Element>();
+    joint_sdf = std::make_shared<sdf::Element>();
     joint_sdf->Copy(model->joint_template);
     joint_sdf->GetAttribute("name")->Set(
         boost::str( boost::format("%s_m%0d_to_%s_m%0d")
@@ -52,14 +52,14 @@ namespace assembly_sim {
     joint_sdf->GetElement("parent")->GetValue()->Set(female_atom->link->GetName());
     joint_sdf->GetElement("child")->GetValue()->Set(male_atom->link->GetName());
 
-    gazebo::math::Pose pose;
+    ignition::math::Pose3d pose;
     to_gazebo(male_mate_point->pose, pose);
     joint_sdf->GetElement("pose")->GetValue()->Set(pose);
 
     //gzwarn<<"joint sdf:\n\n"<<joint_sdf->ToString(">>")<<std::endl;
 
     // Construct the actual joint between these two atom links
-    joint = gazebo_model->GetWorld()->GetPhysicsEngine()->CreateJoint(joint_type, gazebo_model);
+    joint = gazebo_model->GetWorld()->Physics()->CreateJoint(joint_type, gazebo_model);
     joint->SetModel(gazebo_model);
 
     // Load joint description from SDF

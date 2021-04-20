@@ -268,6 +268,12 @@ namespace assembly_sim
       AtomPtr female_atom = *it_fa;
       gzwarn<<"Inspecting female atom: "<<female_atom->link->GetName()<<std::endl;
 
+      // Get the link associated with this atom
+      // If any male mates match this link, ignore them
+      // they are mate points on the same collection of links/joints
+      gazebo::physics::Link_V parents;
+      parents = female_atom->link->GetParentJointsLinks();
+
       // Iterate over all female mate points of female link
       for(std::vector<MatePointPtr>::iterator it_fmp = female_atom->model->female_mate_points.begin();
           it_fmp != female_atom->model->female_mate_points.end();
@@ -284,6 +290,19 @@ namespace assembly_sim
 
           // You can't mate with yourself
           if(male_atom == female_atom) { continue; }
+
+          // Don't mate if the male atom is on a link that matches
+          // the female atom's link
+          if (parents.size()!=0)
+          {
+            if (parents[0] == male_atom->link)
+              {
+                gzwarn << "match found, not making joint " << std::endl;
+                gzwarn << "male link: " << male_atom->link <<std::endl;
+                gzwarn << "parent link: " << parents[0] <<std::endl;
+                continue;
+              }
+          }
 
           // Iterate over all male mate points of male link
           for(std::vector<MatePointPtr>::iterator it_mmp = male_atom->model->male_mate_points.begin();

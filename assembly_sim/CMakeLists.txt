@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(catkin COMPONENTS tf tf_conversions assembly_msgs cmake_modules REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(orocos_kdl REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 find_package(Boost COMPONENTS thread REQUIRED)
 
@@ -99,7 +99,7 @@ include_directories(include
   ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
-  ${EIGEN_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
   )
 
 add_library(assembly_soup_plugin

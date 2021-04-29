@@ -575,6 +575,7 @@ namespace assembly_sim
   AssemblySoup::~AssemblySoup() {
     running_ = false;
     state_update_thread_.join();
+    gzmsg<<"Assembly soup cleaning up."<<std::endl;
   }
 
   void AssemblySoup::stateUpdateLoop() {

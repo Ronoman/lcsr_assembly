@@ -227,16 +227,31 @@ namespace assembly_sim
 
     gzwarn<<"Extracting links..."<<std::endl;
     // Extract the links from the model
-    gazebo::physics::Link_V assembly_links = this->model_->GetLinks();
-    for(gazebo::physics::Link_V::iterator it=assembly_links.begin();
-        it != assembly_links.end();
-        ++it)
+    std::vector<gazebo::physics::LinkPtr> assembly_links;
+
+    std::queue<gazebo::physics::ModelPtr> models;
+    models.push(this->model_);
+    while(models.size() > 0) {
+        gazebo::physics::ModelPtr m = models.front();
+        models.pop();
+
+        for(auto &l : m->GetLinks()) {
+            assembly_links.push_back(l);
+        }
+
+        for(auto &nested_model : m->NestedModels()) {
+            models.push(nested_model);
+        }
+    }
+
+    // Create atoms for each link
+    for(auto &link : assembly_links)
     {
-      gzwarn<<"Creating atom for link: "<<(*it)->GetName()<<std::endl;
+      gzwarn<<"Creating atom for link: "<<link->GetName()<<std::endl;
 
       // Create new atom
       AtomPtr atom = std::make_shared<Atom>();
-      atom->link = *it;
+      atom->link = link;
 
       // Determine the atom type from the link name
       for(std::map<std::string, AtomModelPtr>::iterator model_it=atom_models_.begin();

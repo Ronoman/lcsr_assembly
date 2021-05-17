@@ -41,6 +41,9 @@ namespace assembly_sim {
       sdf::readString(complete_sdf(mate_elem->GetElement("joint")->ToString("")), joint_template_sdf);
       joint_template = joint_template_sdf->Root()->GetElement("model")->GetElement("joint");
 
+      gzmsg<<"Creating mate model with joint template:"<<std::endl;
+      gzmsg<<joint_template_sdf->ToString()<<std::endl<<std::endl;
+
       // Get the mate symmetries
       sdf::ElementPtr symmetry_elem = mate_elem->GetElement("symmetry");
       if(symmetry_elem)

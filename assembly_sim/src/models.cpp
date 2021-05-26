@@ -25,21 +25,21 @@ namespace assembly_sim {
     // Make sure male and female mate points have the same model
     assert(female_mate_point->model == male_mate_point->model);
 
-    gzwarn<<"Creating joint for mate type: "
-      <<female_mate_point->model->type<<" ("
-      <<female_atom->link->GetName()<<"#"
-      <<female_mate_point->id
-      <<") -> ("
-      <<male_atom->link->GetName()<<"#"
-      <<male_mate_point->id<<")"
-      <<std::endl;
+    //gzwarn<<"Creating joint for mate type: "
+    //  <<female_mate_point->model->type<<" ("
+    //  <<female_atom->link->GetName()<<"#"
+    //  <<female_mate_point->id
+    //  <<") -> ("
+    //  <<male_atom->link->GetName()<<"#"
+    //  <<male_mate_point->id<<")"
+    //  <<std::endl;
 
     description = boost::str(boost::format("%s#%d -> %s#%d")% female_atom->link->GetName()% female_mate_point->id% male_atom->link->GetName()% male_mate_point->id);
 
     // Get the joint type
     std::string joint_type;
     model->joint_template->GetAttribute("type")->Get(joint_type);
-    gzwarn<<"Creating joint with type: "<<joint_type<<std::endl;
+    //gzwarn<<"Creating joint with type: "<<joint_type<<std::endl;
 
     // Customize the joint sdf template
     joint_sdf = std::make_shared<sdf::Element>();
@@ -57,17 +57,17 @@ namespace assembly_sim {
     to_gazebo(male_mate_point->pose, pose);
     joint_sdf->GetElement("pose")->GetValue()->Set(pose);
 
-    gzwarn<<"joint sdf:\n\n"<<joint_sdf->ToString(">>")<<std::endl;
+    //gzwarn<<"joint sdf:\n\n"<<joint_sdf->ToString(">>")<<std::endl;
 
     // Construct the actual joint between these two atom links
-    gzwarn<<"Creating joint in model: "<<gazebo_model->GetName()<<"..."<<std::endl;
+    //gzwarn<<"Creating joint in model: "<<gazebo_model->GetName()<<"..."<<std::endl;
     joint = gazebo_model->CreateJoint(name, joint_type, female_atom->link, male_atom->link);
 
     // Load joint description from SDF
     //  - sets parend a child links
     //  - sets the anchor pose
     //  - loads sensor elements
-    gzwarn<<"Loading joint properties..."<<std::endl;
+    //gzwarn<<"Loading joint properties..."<<std::endl;
     try {
         joint->Load(joint_sdf);
     } catch(...) {
@@ -87,7 +87,7 @@ namespace assembly_sim {
     //  - sets axis orientation
     //  - sets axis limits
     //  - attaches parent and child via this joint
-    gzwarn<<"Initializing joint..."<<std::endl;
+    //gzwarn<<"Initializing joint..."<<std::endl;
     joint->Init();
 
     // Joints should initially be detached
@@ -110,7 +110,7 @@ namespace assembly_sim {
 
     links_to_check.push(root_link);
 
-    gzwarn<<"computing component for: "<<root_link->GetName()<<std::endl;
+    //gzwarn<<"computing component for: "<<root_link->GetName()<<std::endl;
 
     while(links_to_check.size() > 0) {
       // Get a link from the queue and add it to the component
@@ -118,7 +118,7 @@ namespace assembly_sim {
       links_to_check.pop();
       connected_component.insert(link);
       checked_links.insert(link);
-      gzwarn<<" adding link to component: "<<link->GetName()<<std::endl;
+      //gzwarn<<" adding link to component: "<<link->GetName()<<std::endl;
 
       if(link->IsStatic()) {
         connected_component_is_static = true;
@@ -130,7 +130,7 @@ namespace assembly_sim {
           it_l != parent_links.end();
           ++it_l)
       {
-        gzwarn<<" parent link: "<<(*it_l)->GetName()<<std::endl;
+        //gzwarn<<" parent link: "<<(*it_l)->GetName()<<std::endl;
         if(checked_links.find(*it_l) == checked_links.end()) {
           links_to_check.push(*it_l);
         }
@@ -142,7 +142,7 @@ namespace assembly_sim {
           it_l != child_links.end();
           ++it_l)
       {
-        gzwarn<<" child link: "<<(*it_l)->GetName()<<std::endl;
+        //gzwarn<<" child link: "<<(*it_l)->GetName()<<std::endl;
         if(checked_links.find(*it_l) == checked_links.end()) {
           links_to_check.push(*it_l);
         }

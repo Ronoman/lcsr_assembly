@@ -41,8 +41,8 @@ namespace assembly_sim {
       sdf::readString(complete_sdf(mate_elem->GetElement("joint")->ToString("")), joint_template_sdf);
       joint_template = joint_template_sdf->Root()->GetElement("model")->GetElement("joint");
 
-      gzmsg<<"Creating mate model with joint template:"<<std::endl;
-      gzmsg<<joint_template_sdf->ToString()<<std::endl<<std::endl;
+      //gzmsg<<"Creating mate model with joint template:"<<std::endl;
+      //gzmsg<<joint_template_sdf->ToString()<<std::endl<<std::endl;
 
       // Get the mate symmetries
       sdf::ElementPtr symmetry_elem = mate_elem->GetElement("symmetry");
@@ -291,7 +291,7 @@ namespace assembly_sim {
         attach_threshold_elem->GetElement("linear")->GetValue()->Get(attach_threshold_linear);
         attach_threshold_elem->GetElement("angular")->GetValue()->Get(attach_threshold_angular);
 
-        gzwarn<<(boost::format("Attach threshold linear: %f angular %f") % attach_threshold_linear % attach_threshold_angular)<<std::endl;
+        //gzwarn<<(boost::format("Attach threshold linear: %f angular %f") % attach_threshold_linear % attach_threshold_angular)<<std::endl;
       } else {
         gzerr<<"No attach_threshold / linear / angular elements!"<<std::endl;
       }
@@ -302,7 +302,7 @@ namespace assembly_sim {
         detach_threshold_elem->GetElement("linear")->GetValue()->Get(detach_threshold_linear);
         detach_threshold_elem->GetElement("angular")->GetValue()->Get(detach_threshold_angular);
 
-        gzwarn<<(boost::format("Detach threshold linear: %f angular %f") % attach_threshold_linear % attach_threshold_angular)<<std::endl;
+        //gzwarn<<(boost::format("Detach threshold linear: %f angular %f") % attach_threshold_linear % attach_threshold_angular)<<std::endl;
       } else {
         gzerr<<"No detach_threshold / linear / angular elements!"<<std::endl;
       }

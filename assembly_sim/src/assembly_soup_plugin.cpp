@@ -88,7 +88,7 @@ namespace assembly_sim
       updates_per_second_elem->GetValue()->Get(updates_per_second_);
     }
 
-    gzwarn<<"Getting mate types..."<<std::endl;
+    //gzwarn<<"Getting mate types..."<<std::endl;
     // Get the description of the mates in this soup
     sdf::ElementPtr mate_elem = _sdf->GetElement("mate_model");
 
@@ -137,7 +137,7 @@ namespace assembly_sim
       mate_elem = mate_elem->GetNextElement(mate_elem->GetName());
     }
 
-    gzwarn<<"Getting atom models..."<<std::endl;
+    //gzwarn<<"Getting atom models..."<<std::endl;
     // Get the description of the atoms in this soup
     sdf::ElementPtr atom_elem = _sdf->GetElement("atom_model");
 
@@ -159,7 +159,7 @@ namespace assembly_sim
         mate_elem->GetAttribute("gender")->Get(gender);
         to_kdl(mate_elem->GetElement("pose"), base_pose);
 
-        gzwarn<<"Adding mate point type: "<<type<<" gender: "<<gender<<" at: "<<base_pose<<std::endl;
+        //gzwarn<<"Adding mate point type: "<<type<<" gender: "<<gender<<" at: "<<base_pose<<std::endl;
 
         MateModelPtr mate_model = mate_models_[type];
 
@@ -195,7 +195,7 @@ namespace assembly_sim
             atom_model->female_mate_points.size()
             + atom_model->male_mate_points.size();
 
-          gzwarn<<"Adding female mate point "<<atom_model->type<<"#"<<mate_point->id<<" pose: "<<std::endl<<mate_point->pose<<std::endl;
+          //gzwarn<<"Adding female mate point "<<atom_model->type<<"#"<<mate_point->id<<" pose: "<<std::endl<<mate_point->pose<<std::endl;
 
           atom_model->female_mate_points.push_back(mate_point);
 #endif
@@ -207,7 +207,7 @@ namespace assembly_sim
             atom_model->female_mate_points.size()
             + atom_model->male_mate_points.size();
 
-          gzwarn<<"Adding male mate point "<<atom_model->type<<"#"<<mate_point->id<<" pose: "<<std::endl<<mate_point->pose<<std::endl;
+          //gzwarn<<"Adding male mate point "<<atom_model->type<<"#"<<mate_point->id<<" pose: "<<std::endl<<mate_point->pose<<std::endl;
 
           atom_model->male_mate_points.push_back(mate_point);
         } else {
@@ -225,7 +225,7 @@ namespace assembly_sim
       atom_elem = atom_elem->GetNextElement(atom_elem->GetName());
     }
 
-    gzwarn<<"Extracting links..."<<std::endl;
+    //gzwarn<<"Extracting links..."<<std::endl;
     // Extract the links from the model
     std::vector<gazebo::physics::LinkPtr> assembly_links;
 
@@ -247,7 +247,7 @@ namespace assembly_sim
     // Create atoms for each link
     for(auto &link : assembly_links)
     {
-      gzwarn<<"Creating atom for link: "<<link->GetName()<<std::endl;
+      //gzwarn<<"Creating atom for link: "<<link->GetName()<<std::endl;
 
       // Create new atom
       AtomPtr atom = std::make_shared<Atom>();
@@ -270,7 +270,7 @@ namespace assembly_sim
         continue;
       }
 
-      gzwarn<<"Atom "<<atom->link->GetName()<<" is a "<<atom->model->type<<std::endl;
+      //gzwarn<<"Atom "<<atom->link->GetName()<<" is a "<<atom->model->type<<std::endl;
 
       atoms_.push_back(atom);
     }
@@ -281,7 +281,7 @@ namespace assembly_sim
         ++it_fa)
     {
       AtomPtr female_atom = *it_fa;
-      gzwarn<<"Inspecting female atom: "<<female_atom->link->GetName()<<std::endl;
+      //gzwarn<<"Inspecting female atom: "<<female_atom->link->GetName()<<std::endl;
 
       // Get the link associated with this atom
       // If any male mates match this link, ignore them
@@ -312,9 +312,9 @@ namespace assembly_sim
           {
             if (parents[0] == male_atom->link)
               {
-                gzwarn << "match found, not making joint " << std::endl;
-                gzwarn << "male link: " << male_atom->link <<std::endl;
-                gzwarn << "parent link: " << parents[0] <<std::endl;
+                //gzwarn << "match found, not making joint " << std::endl;
+                //gzwarn << "male link: " << male_atom->link <<std::endl;
+                //gzwarn << "parent link: " << parents[0] <<std::endl;
                 continue;
               }
           }

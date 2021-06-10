@@ -212,6 +212,8 @@ namespace assembly_sim {
     // Mate point error
     KDL::Twist mate_point_error;
 
+    std::vector<KDL::Frame>::iterator mated_symmetry;
+
     // Max erp
     double max_stop_erp;
     double max_erp;
@@ -260,8 +262,6 @@ namespace assembly_sim {
     double detach_threshold_linear;
     double detach_threshold_angular;
 
-    std::vector<KDL::Frame>::iterator mated_symmetry;
-
     Eigen::Vector3d max_force, max_torque;
 
     ProximityMateBase(
@@ -272,7 +272,6 @@ namespace assembly_sim {
         AtomPtr female_atom,
         AtomPtr male_atom) :
       Mate(mate_model, gazebo_model, female_mate_point_, male_mate_point_, female_atom, male_atom),
-      mated_symmetry(mate_model->symmetries.end()),
       max_force(Eigen::Vector3d::Zero()),
       max_torque(Eigen::Vector3d::Zero())
     {

@@ -377,6 +377,11 @@ namespace assembly_sim
         mates_msg.male.push_back(mate->joint->GetChild()->GetName());
         mates_msg.linear_error.push_back(mate_msg.linear_error);
         mates_msg.angular_error.push_back(mate_msg.angular_error);
+
+        geometry_msgs::Quaternion symmetry_orientation;
+        tf::quaternionKDLToMsg((*(mate->mated_symmetry)).M, symmetry_orientation);
+        mates_msg.symmetry.push_back(symmetry_orientation);
+
       } else if(publish_active_mates_ and mate_msg.linear_error < 0.03 and mate_msg.linear_error > 0.0) {
         mating_msg.mates.push_back(mate_msg);
       }

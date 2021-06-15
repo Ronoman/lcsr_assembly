@@ -31,6 +31,9 @@ namespace assembly_sim {
       void OnUpdate(const gazebo::common::UpdateInfo & /*_info*/);
       ~AssemblySoup();
 
+      // Ros callback for suppresing mates
+      void SuppressMatesCallback(const assembly_msgs::MatingListPtr&);
+
       // Pointer to the model
     private:
       gazebo::physics::ModelPtr model_;
@@ -38,6 +41,8 @@ namespace assembly_sim {
 
       // Pointer to the update event connection
       gazebo::event::ConnectionPtr updateConnection_;
+
+      ros::Subscriber suppress_mates_sub_;
 
       ros::Publisher male_mate_pub_;
       ros::Publisher female_mate_pub_;

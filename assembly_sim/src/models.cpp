@@ -98,6 +98,9 @@ namespace assembly_sim {
     max_erp = joint->GetParam("erp",0);
     max_stop_erp = joint->GetParam("stop_erp",0);
 
+    // Initialize suppress flag to NO
+    suppressed = false;
+
     gzmsg<<"Joint "<<description<<" created."<<std::endl;
   }
 

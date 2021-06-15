@@ -46,11 +46,45 @@ namespace assembly_sim
   {
   }
 
+  void AssemblySoup::suppressMatesCallback(const assembly_msgs::MatingListPtr& msg)
+  {
+    // Iterate over all mates
+    unsigned int iter = 0;
+    for (boost::unordered_set<MatePtr>::iterator it = mates_.begin();
+         it != mates_.end();
+         ++it, ++iter)
+    {
+      MatePtr mate = *it;
+      std::string desc = mate->getDescription();
+
+      // Assume a mate is not suppressed unless the contents of this
+      // message declare otherwise
+      mate->suppressMate(false);
+
+      // Iterate over all possible mates in the incoming message
+      for (auto msg_it : msg->mates)
+      {
+        // Look for a mate that matches the description
+        if (desc.compare(msg_it.description) == 0)
+        {
+          gzwarn << "Suppress Mate Callback - Found matching mate for: " << desc << std::endl;
+          mate->suppressMate(true);
+        }
+      }
+    }
+  }
+
   void AssemblySoup::Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   {
     // Store the pointer to the model
     this->model_ = _parent;
     this->sdf_ = _sdf;
+
+    // Create a node handle for ros topics
+    ros::NodeHandle nh;
+    suppress_mates_sub_ = nh.subscribe("suppress_mates", 1, &AssemblySoup::SuppressMatesCallback, this);
+
+    // Subscribe to the suppress mates topic
 
     // Get TF configuration
     sdf::ElementPtr broadcast_elem = _sdf->GetElement("tf_world_frame");
@@ -60,7 +94,6 @@ namespace assembly_sim
       broadcast_tf_ = true;
 
       // set up publishers for visualization
-      ros::NodeHandle nh;
       male_mate_pub_ = nh.advertise<visualization_msgs::MarkerArray>("male_mate_points",1000);
       female_mate_pub_ = nh.advertise<visualization_msgs::MarkerArray>("female_mate_points",1000);
       wrenches_pub_ = nh.advertise<visualization_msgs::MarkerArray>("mate_wrenches",100);
@@ -130,7 +163,7 @@ namespace assembly_sim
           gzerr<<"ERROR: \""<<model<<"\" is not a valid model type"<<std::endl;
           return;
         }
-        mate_factories_[mate_model->type] = mate_factory; 
+        mate_factories_[mate_model->type] = mate_factory;
       }
 
       // Get the next atom element

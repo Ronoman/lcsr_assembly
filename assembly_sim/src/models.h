@@ -178,6 +178,14 @@ namespace assembly_sim {
     void serviceUpdate() { pending_state = NONE; }
     State getUpdate() { return pending_state; }
 
+    // Suppress function
+    void suppressMate(bool suppress) {
+      suppressed = suppress;
+      if (suppress)
+        gzwarn<<"Suppressing a mate: "<<getDescription()<<std::endl;
+      return;
+    }
+
     // Introspection
     std::string description;
     std::string getDescription() {
@@ -217,6 +225,9 @@ namespace assembly_sim {
     // Max erp
     double max_stop_erp;
     double max_erp;
+
+    // Suppress Flag
+    bool suppressed;
   };
 
   // The model for a type of atom
@@ -328,7 +339,6 @@ namespace assembly_sim {
       // - get jump offset
       // - apply jump to each element in the connected component that this link is in
       // - merge connected components
-
 
       // Get connected components
       boost::unordered_set<gazebo::physics::LinkPtr>
@@ -495,6 +505,15 @@ namespace assembly_sim {
           it_sym != model->symmetries.end();
           ++it_sym)
       {
+        // Check for suppressed mates
+        if(state == Mate::MATED and suppressed == true)
+        {
+            // The mate has been flagged as suppressed after it was mated, demate it
+            gzwarn<<"> Request unmate on suppressed mate: "<<getDescription()<<std::endl;
+            this->requestUpdate(Mate::UNMATED);
+            break;
+        }
+
         // Compute the world frame of the female mate frame
         // This takes into account symmetries in the mate
         KDL::Frame female_mate_frame = female_atom_frame * female_mate_point->pose * (*it_sym);
@@ -537,6 +556,10 @@ namespace assembly_sim {
             break;
           }
         } else {
+          // Don't call the attach logic if this mate is suppressed
+          if(suppressed)
+            break;
+
           // Determine if mated atoms need to be attached
           if(twist_err.vel.Norm() < attach_threshold_linear and
              twist_err.rot.Norm() < attach_threshold_angular)
@@ -706,6 +729,12 @@ namespace assembly_sim {
 
       // Don't apply magnetic force if the mate is attached
       if(state == Mate::MATED) {
+        return;
+      }
+
+      // Don't apply magnetic force if the mate is suppressed
+      if(suppressed)
+      {
         return;
       }
 

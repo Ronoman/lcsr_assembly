@@ -152,6 +152,7 @@ namespace assembly_sim {
       UNMATED = 1, // There is no interaction between this mate's atoms
       MATING = 2, // This mate's atoms are connected by the transitional mechanism
       MATED = 3 // This mate's atoms are connected by a static joint
+      SUPPRESSED = 4 // This mate should be ignored, if already mated it should be demated
     };
 
     Mate(
@@ -180,9 +181,16 @@ namespace assembly_sim {
 
     // Suppress function
     void suppressMate(bool suppress) {
-      suppressed = suppress;
       if (suppress)
-        gzwarn<<"Suppressing a mate: "<<getDescription()<<std::endl;
+      {
+        pending_state = Mate::SUPPRESSED;
+        gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
+      }
+      else
+      {
+        pending_state = Mate::UNMATED;
+        gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
+      }
       return;
     }
 
@@ -225,9 +233,6 @@ namespace assembly_sim {
     // Max erp
     double max_stop_erp;
     double max_erp;
-
-    // Suppress Flag
-    bool suppressed;
   };
 
   // The model for a type of atom
@@ -505,14 +510,9 @@ namespace assembly_sim {
           it_sym != model->symmetries.end();
           ++it_sym)
       {
-        // Check for suppressed mates
-        if(state == Mate::MATED and suppressed == true)
-        {
-            // The mate has been flagged as suppressed after it was mated, demate it
-            gzwarn<<"> Request unmate on suppressed mate: "<<getDescription()<<std::endl;
-            this->requestUpdate(Mate::UNMATED);
-            break;
-        }
+        // Don't do any logic this mate is suppressed
+        if(state == Mate::SUPPRESSED)
+          break;
 
         // Compute the world frame of the female mate frame
         // This takes into account symmetries in the mate
@@ -556,10 +556,6 @@ namespace assembly_sim {
             break;
           }
         } else {
-          // Don't call the attach logic if this mate is suppressed
-          if(suppressed)
-            break;
-
           // Determine if mated atoms need to be attached
           if(twist_err.vel.Norm() < attach_threshold_linear and
              twist_err.rot.Norm() < attach_threshold_angular)
@@ -587,6 +583,15 @@ namespace assembly_sim {
 
       switch(this->getUpdate()) {
         case Mate::NONE:
+          break;
+
+        case Mate::SUPPRESSED:
+          if(state != Mate::UNMATED) {
+            gzwarn<<"> Suppressing and deatching an active mate: "<<getDescription()<<std::endl;
+            this->detach();
+            this->state = Mate::UNMATED;
+            this->mated_symmetry = model->symmetries.end();
+          }
           break;
 
         case Mate::UNMATED:
@@ -733,7 +738,7 @@ namespace assembly_sim {
       }
 
       // Don't apply magnetic force if the mate is suppressed
-      if(suppressed)
+      if(state == Mate::SUPPRESSED)
       {
         return;
       }

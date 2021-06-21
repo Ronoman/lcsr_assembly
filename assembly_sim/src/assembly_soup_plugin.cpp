@@ -46,7 +46,7 @@ namespace assembly_sim
   {
   }
 
-  void AssemblySoup::suppressMatesCallback(const assembly_msgs::MatingListPtr& msg)
+  void AssemblySoup::SuppressMatesCallback(const assembly_msgs::MatingListPtr& msg)
   {
     // Iterate over all mates
     unsigned int iter = 0;
@@ -67,7 +67,7 @@ namespace assembly_sim
         // Look for a mate that matches the description
         if (desc.compare(msg_it.description) == 0)
         {
-          gzwarn << "Suppress Mate Callback - Found matching mate for: " << desc << std::endl;
+          gzwarn << "Suppress Mate - found matching mate for: " << desc << std::endl;
           mate->suppressMate(true);
         }
       }

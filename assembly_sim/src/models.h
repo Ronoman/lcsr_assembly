@@ -151,7 +151,7 @@ namespace assembly_sim {
       NONE = 0, // No state / undefined
       UNMATED = 1, // There is no interaction between this mate's atoms
       MATING = 2, // This mate's atoms are connected by the transitional mechanism
-      MATED = 3 // This mate's atoms are connected by a static joint
+      MATED = 3, // This mate's atoms are connected by a static joint
       SUPPRESSED = 4 // This mate should be ignored, if already mated it should be demated
     };
 
@@ -181,14 +181,14 @@ namespace assembly_sim {
 
     // Suppress function
     void suppressMate(bool suppress) {
-      if (suppress)
+      if (suppress && state != Mate::SUPPRESSED)
       {
-        pending_state = Mate::SUPPRESSED;
+        requestUpdate(Mate::SUPPRESSED);
         gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
       }
-      else
+      else if (!suppress && state == Mate::SUPPRESSED)
       {
-        pending_state = Mate::UNMATED;
+        requestUpdate(Mate::UNMATED);
         gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
       }
       return;
@@ -586,7 +586,7 @@ namespace assembly_sim {
           break;
 
         case Mate::SUPPRESSED:
-          if(state != Mate::UNMATED) {
+          if((this->state == Mate::MATED) || (this->state == Mate::MATING)) {
             gzwarn<<"> Suppressing and deatching an active mate: "<<getDescription()<<std::endl;
             this->detach();
             this->state = Mate::UNMATED;

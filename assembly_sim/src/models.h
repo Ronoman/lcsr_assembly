@@ -183,12 +183,12 @@ namespace assembly_sim {
     void suppressMate(bool suppress) {
       if (suppress && state != Mate::SUPPRESSED)
       {
-        requestUpdate(Mate::SUPPRESSED);
+        this->requestUpdate(Mate::SUPPRESSED);
         gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
       }
       else if (!suppress && state == Mate::SUPPRESSED)
       {
-        requestUpdate(Mate::UNMATED);
+        this->requestUpdate(Mate::UNMATED);
         gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
       }
       return;
@@ -499,6 +499,10 @@ namespace assembly_sim {
         return;
       }
 
+      // Don't do any logic this mate is suppressed
+      if(state == Mate::SUPPRESSED)
+        return;
+
       KDL::Frame female_atom_frame;
       to_kdl(female_atom->link->WorldPose(), female_atom_frame);
 
@@ -510,10 +514,6 @@ namespace assembly_sim {
           it_sym != model->symmetries.end();
           ++it_sym)
       {
-        // Don't do any logic this mate is suppressed
-        if(state == Mate::SUPPRESSED)
-          break;
-
         // Compute the world frame of the female mate frame
         // This takes into account symmetries in the mate
         KDL::Frame female_mate_frame = female_atom_frame * female_mate_point->pose * (*it_sym);
@@ -589,7 +589,7 @@ namespace assembly_sim {
           if((this->state == Mate::MATED) || (this->state == Mate::MATING)) {
             gzwarn<<"> Suppressing and deatching an active mate: "<<getDescription()<<std::endl;
             this->detach();
-            this->state = Mate::UNMATED;
+            this->state = Mate::SUPPRESSED;
             this->mated_symmetry = model->symmetries.end();
           }
           break;

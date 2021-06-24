@@ -420,11 +420,14 @@ namespace assembly_sim
       }
 
 #if 1
-      // Check if this mate is already scheduled to be updated
-      if(mate->needsUpdate()) {
-        //gzwarn<<"mate "<<mate->getDescription()<<" already scheduled."<<std::endl;
-        continue;
-      }
+// TODO: confirm that this step is now uncessary as the update is handled below on line 434
+//       checking for this update but not queing it can actually skip the update logic in the model
+//
+//      // Check if this mate is already scheduled to be updated
+//      if(mate->needsUpdate()) {
+//        //gzwarn<<"mate "<<mate->getDescription()<<" already scheduled."<<std::endl;
+//        continue;
+//      }
 
       // Queue any updates
       mate->queueUpdate();

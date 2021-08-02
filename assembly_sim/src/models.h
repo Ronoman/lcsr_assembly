@@ -5,6 +5,7 @@
 #include <iterator>
 #include <queue>
 
+#include <kdl/frames.hpp>
 #include "util.h"
 
 namespace assembly_sim {

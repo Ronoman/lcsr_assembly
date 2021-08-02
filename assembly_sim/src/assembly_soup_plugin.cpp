@@ -88,10 +88,8 @@ namespace assembly_sim
       updates_per_second_elem->GetValue()->Get(updates_per_second_);
     }
 
-    gzwarn<<"Getting mate types..."<<std::endl;
     // Get the description of the mates in this soup
     sdf::ElementPtr mate_elem = _sdf->GetElement("mate_model");
-    gzwarn<<"Is it here?" << std::endl;
 
     while(mate_elem && mate_elem->GetName() == "mate_model")
     {
@@ -137,8 +135,6 @@ namespace assembly_sim
       // Get the next atom element
       mate_elem = mate_elem->GetNextElement(mate_elem->GetName());
     }
-
-    gzwarn<<"Nope" << std::endl;
 
     //gzwarn<<"Getting atom models..."<<std::endl;
     // Get the description of the atoms in this soup

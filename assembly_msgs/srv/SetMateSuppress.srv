@@ -1,0 +1,7 @@
+string link_name_a
+string link_name_b
+
+bool suppress
+---
+# (is a valid mate) && (is now suppressed)
+bool suppressed

@@ -46,7 +46,7 @@ namespace assembly_sim
   {
   }
 
-  void AssemblySoup::SuppressMatesCallback(const assembly_msgs::MatingListPtr& msg)
+  bool AssemblySoup::SuppressMatesCallback(assembly_msgs::SetMateSuppress::Request& req, assembly_msgs::SetMateSuppress::Response& res)
   {
     // Iterate over all mates
     unsigned int iter = 0;
@@ -57,21 +57,38 @@ namespace assembly_sim
       MatePtr mate = *it;
       std::string desc = mate->getDescription();
 
+      std::string male_name = mate->male->link->GetName();
+      std::string female_name = mate->female->link->GetName();
+
+      gzerr << "Mate desc: " << desc << std::endl;
+
       // Assume a mate is not suppressed unless the contents of this
       // message declare otherwise
       mate->suppressMate(false);
 
-      // Iterate over all possible mates in the incoming message
-      for (auto msg_it : msg->mates)
+      // Look for a mate that matches the description
+      if ((male_name.compare(req.link_name_a) == 0 && female_name.compare(req.link_name_b) == 0) |
+          (male_name.compare(req.link_name_b) == 0 && female_name.compare(req.link_name_a) == 0))
       {
-        // Look for a mate that matches the description
-        if (desc.compare(msg_it.description) == 0)
+        if(req.suppress)
         {
           gzwarn << "Suppress Mate - found matching mate for: " << desc << std::endl;
           mate->suppressMate(true);
+          res.suppressed = true;
+          return true;
+        }
+        else
+        {
+          gzwarn << "Unsuppress Mate - found matching mate for: " << desc << std::endl;
+          mate->suppressMate(false);
+          res.suppressed = false;
+          return true;
         }
       }
     }
+
+    res.suppressed = false;
+    return false;
   }
 
   void AssemblySoup::Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf)
@@ -82,7 +99,7 @@ namespace assembly_sim
 
     // Create a node handle for ros topics
     ros::NodeHandle nh;
-    suppress_mates_sub_ = nh.subscribe("suppress_mates", 1, &AssemblySoup::SuppressMatesCallback, this);
+    suppress_mates_srv_ = nh.advertiseService("suppress_mates", &AssemblySoup::SuppressMatesCallback, this);
 
     // Subscribe to the suppress mates topic
 

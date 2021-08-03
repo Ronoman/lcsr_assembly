@@ -19,6 +19,9 @@
 
 #include <kdl/frames.hpp>
 
+\
+#include <assembly_msgs/SetMateSuppress.h>
+
 #include "models.h"
 
 namespace assembly_sim {
@@ -32,7 +35,7 @@ namespace assembly_sim {
       ~AssemblySoup();
 
       // Ros callback for suppresing mates
-      void SuppressMatesCallback(const assembly_msgs::MatingListPtr&);
+      bool SuppressMatesCallback(assembly_msgs::SetMateSuppress::Request& req, assembly_msgs::SetMateSuppress::Response& res);
 
       // Pointer to the model
     private:
@@ -42,7 +45,7 @@ namespace assembly_sim {
       // Pointer to the update event connection
       gazebo::event::ConnectionPtr updateConnection_;
 
-      ros::Subscriber suppress_mates_sub_;
+      ros::ServiceServer suppress_mates_srv_;
 
       ros::Publisher male_mate_pub_;
       ros::Publisher female_mate_pub_;

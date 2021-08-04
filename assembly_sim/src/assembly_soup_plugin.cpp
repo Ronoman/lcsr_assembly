@@ -160,7 +160,6 @@ namespace assembly_sim
       updates_per_second_elem->GetValue()->Get(updates_per_second_);
     }
 
-    //gzwarn<<"Getting mate types..."<<std::endl;
     // Get the description of the mates in this soup
     sdf::ElementPtr mate_elem = _sdf->GetElement("mate_model");
 
@@ -445,8 +444,8 @@ namespace assembly_sim
       mate_msg.angular_error =mate->mate_point_error.rot.Norm();
 
       if(publish_active_mates_ and mate->state == Mate::MATED) {
-        mates_msg.female.push_back(mate->joint->GetParent()->GetName());
-        mates_msg.male.push_back(mate->joint->GetChild()->GetName());
+        mates_msg.female.push_back(mate->joint->GetParent()->GetScopedName());
+        mates_msg.male.push_back(mate->joint->GetChild()->GetScopedName());
         mates_msg.linear_error.push_back(mate_msg.linear_error);
         mates_msg.angular_error.push_back(mate_msg.angular_error);
 

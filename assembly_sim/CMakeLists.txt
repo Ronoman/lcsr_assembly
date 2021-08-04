@@ -114,6 +114,12 @@ target_link_libraries(assembly_soup_plugin
   ${catkin_LIBRARIES}
 )
 
+add_executable(symbol_test
+    src/symbol_test.cpp)
+target_link_libraries(
+    symbol_test
+    ${orocos_kdl_LIBRARIES})
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)

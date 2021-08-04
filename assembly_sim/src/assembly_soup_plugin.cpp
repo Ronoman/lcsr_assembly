@@ -46,13 +46,40 @@ namespace assembly_sim
   {
   }
 
-  bool AssemblySoup::SuppressMatesCallback(assembly_msgs::SetMateSuppress::Request& req, assembly_msgs::SetMateSuppress::Response& res)
+  bool AssemblySoup::SuppressMatesCallback(assembly_msgs::SetMateSuppression::Request& req, assembly_msgs::SetMateSuppression::Response& res)
   {
+    // Must have at least a parent model and child link
+    if(req.scoped_link.size() < 2)
+      return false;
+
+    // If the parent model is not the model this plugin is attached to, don't process
+    if(this->model_->GetName().compare(req.scoped_link[0]) != 0)
+      return false;
+
+    // Save the top level model as the start
+    gazebo::physics::BasePtr cur_model = model_;
+
+    // Iterate over all but first and last
+    for(int i = 1; i < req.scoped_link.size(); i++)
+    {
+      std::string model = req.scoped_link[i];
+
+      cur_model = cur_model->GetChild(model);
+
+      // If this child doesn't exist, then its not a valid scope list
+      if(!cur_model)
+        return false;
+    }
+
+    gazebo::physics::BasePtr link = cur_model;
+
+    // False until we've confirmed that there is a link that this plugin manages we can un/suppress
+    bool found_link = false;
+
     // Iterate over all mates
-    unsigned int iter = 0;
     for (boost::unordered_set<MatePtr>::iterator it = mates_.begin();
          it != mates_.end();
-         ++it, ++iter)
+         ++it)
     {
       MatePtr mate = *it;
       std::string desc = mate->getDescription();
@@ -60,35 +87,30 @@ namespace assembly_sim
       std::string male_name = mate->male->link->GetName();
       std::string female_name = mate->female->link->GetName();
 
-      gzerr << "Mate desc: " << desc << std::endl;
-
-      // Assume a mate is not suppressed unless the contents of this
-      // message declare otherwise
-      mate->suppressMate(false);
-
-      // Look for a mate that matches the description
-      if ((male_name.compare(req.link_name_a) == 0 && female_name.compare(req.link_name_b) == 0) |
-          (male_name.compare(req.link_name_b) == 0 && female_name.compare(req.link_name_a) == 0))
+      // Look for all mates that match the link
+      if (male_name.compare(link->GetName()) == 0 || female_name.compare(link->GetName()) == 0)
       {
         if(req.suppress)
         {
           gzwarn << "Suppress Mate - found matching mate for: " << desc << std::endl;
           mate->suppressMate(true);
           res.suppressed = true;
-          return true;
+
+          found_link = true;
         }
         else
         {
           gzwarn << "Unsuppress Mate - found matching mate for: " << desc << std::endl;
           mate->suppressMate(false);
           res.suppressed = false;
-          return true;
+
+          found_link = true;
         }
       }
     }
 
-    res.suppressed = false;
-    return false;
+    // If we found a link, service succeeded.
+    return found_link;
   }
 
   void AssemblySoup::Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf)

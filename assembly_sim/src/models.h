@@ -190,7 +190,7 @@ namespace assembly_sim {
       else if (!suppress && state == Mate::SUPPRESSED)
       {
         this->requestUpdate(Mate::UNMATED);
-        // gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
+        gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
       }
       return;
     }
@@ -605,6 +605,10 @@ namespace assembly_sim {
             this->detach();
             this->state = Mate::UNMATED;
             this->mated_symmetry = model->symmetries.end();
+          } else if(state == Mate::SUPPRESSED)
+          {
+            gzwarn<<"> Unsuppressing: "<<getDescription()<<std::endl;
+            this->state = Mate::UNMATED;
           }
           break;
 

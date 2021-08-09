@@ -95,7 +95,7 @@ link_directories(
   )
 
 include_directories(include
-  ${OROCOS_KDL_INCLUDE_DIR}
+  ${orocos_kdl_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}

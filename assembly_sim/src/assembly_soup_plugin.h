@@ -19,6 +19,9 @@
 
 #include <kdl/frames.hpp>
 
+\
+#include <assembly_msgs/SetMateSuppression.h>
+
 #include "models.h"
 
 namespace assembly_sim {
@@ -31,6 +34,9 @@ namespace assembly_sim {
       void OnUpdate(const gazebo::common::UpdateInfo & /*_info*/);
       ~AssemblySoup();
 
+      // Ros callback for suppresing mates
+      bool SuppressMatesCallback(assembly_msgs::SetMateSuppression::Request& req, assembly_msgs::SetMateSuppression::Response& res);
+
       // Pointer to the model
     private:
       gazebo::physics::ModelPtr model_;
@@ -38,6 +44,8 @@ namespace assembly_sim {
 
       // Pointer to the update event connection
       gazebo::event::ConnectionPtr updateConnection_;
+
+      ros::ServiceServer suppress_mates_srv_;
 
       ros::Publisher male_mate_pub_;
       ros::Publisher female_mate_pub_;

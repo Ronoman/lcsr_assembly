@@ -152,7 +152,8 @@ namespace assembly_sim {
       NONE = 0, // No state / undefined
       UNMATED = 1, // There is no interaction between this mate's atoms
       MATING = 2, // This mate's atoms are connected by the transitional mechanism
-      MATED = 3 // This mate's atoms are connected by a static joint
+      MATED = 3, // This mate's atoms are connected by a static joint
+      SUPPRESSED = 4 // This mate should be ignored, if already mated it should be demated
     };
 
     Mate(
@@ -178,6 +179,21 @@ namespace assembly_sim {
     bool needsUpdate() const { return pending_state != NONE; }
     void serviceUpdate() { pending_state = NONE; }
     State getUpdate() { return pending_state; }
+
+    // Suppress function
+    void suppressMate(bool suppress) {
+      if (suppress && state != Mate::SUPPRESSED)
+      {
+        this->requestUpdate(Mate::SUPPRESSED);
+        // gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
+      }
+      else if (!suppress && state == Mate::SUPPRESSED)
+      {
+        this->requestUpdate(Mate::UNMATED);
+        gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
+      }
+      return;
+    }
 
     // Introspection
     std::string description;
@@ -329,7 +345,6 @@ namespace assembly_sim {
       // - get jump offset
       // - apply jump to each element in the connected component that this link is in
       // - merge connected components
-
 
       // Get connected components
       boost::unordered_set<gazebo::physics::LinkPtr>
@@ -485,6 +500,10 @@ namespace assembly_sim {
         return;
       }
 
+      // Don't do any logic this mate is suppressed
+      if(state == Mate::SUPPRESSED)
+        return;
+
       KDL::Frame female_atom_frame;
       to_kdl(female_atom->link->WorldPose(), female_atom_frame);
 
@@ -567,6 +586,18 @@ namespace assembly_sim {
         case Mate::NONE:
           break;
 
+        case Mate::SUPPRESSED:
+          if((this->state == Mate::MATED) || (this->state == Mate::MATING)) {
+            gzwarn<<"> Suppressing and deatching an active mate: "<<getDescription()<<std::endl;
+            this->detach();
+            this->state = Mate::SUPPRESSED;
+            this->mated_symmetry = model->symmetries.end();
+          } else {
+            gzwarn<<"> Suppressing an inactive mate: "<<getDescription()<<std::endl;
+            this->state = Mate::SUPPRESSED;
+          }
+          break;
+
         case Mate::UNMATED:
         case Mate::MATING:
           if(state == Mate::MATED) {
@@ -574,6 +605,10 @@ namespace assembly_sim {
             this->detach();
             this->state = Mate::UNMATED;
             this->mated_symmetry = model->symmetries.end();
+          } else if(state == Mate::SUPPRESSED)
+          {
+            gzwarn<<"> Unsuppressing: "<<getDescription()<<std::endl;
+            this->state = Mate::UNMATED;
           }
           break;
 
@@ -707,6 +742,12 @@ namespace assembly_sim {
 
       // Don't apply magnetic force if the mate is attached
       if(state == Mate::MATED) {
+        return;
+      }
+
+      // Don't apply magnetic force if the mate is suppressed
+      if(state == Mate::SUPPRESSED)
+      {
         return;
       }
 

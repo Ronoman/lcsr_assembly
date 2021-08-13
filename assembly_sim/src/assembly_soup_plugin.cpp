@@ -46,11 +46,84 @@ namespace assembly_sim
   {
   }
 
+  bool AssemblySoup::SuppressMatesCallback(assembly_msgs::SetMateSuppression::Request& req, assembly_msgs::SetMateSuppression::Response& res)
+  {
+    // Must have at least a parent model and child link
+    if(req.scoped_link.size() < 2)
+      return false;
+
+    // If the parent model is not the model this plugin is attached to, don't process
+    if(this->model_->GetName().compare(req.scoped_link[0]) != 0)
+      return false;
+
+    // Save the top level model as the start
+    gazebo::physics::BasePtr cur_model = model_;
+
+    // Iterate over all but first and last
+    for(int i = 1; i < req.scoped_link.size(); i++)
+    {
+      std::string model = req.scoped_link[i];
+
+      cur_model = cur_model->GetChild(model);
+
+      // If this child doesn't exist, then its not a valid scope list
+      if(!cur_model)
+        return false;
+    }
+
+    gazebo::physics::BasePtr link = cur_model;
+
+    // False until we've confirmed that there is a link that this plugin manages we can un/suppress
+    bool found_link = false;
+
+    // Iterate over all mates
+    for (boost::unordered_set<MatePtr>::iterator it = mates_.begin();
+         it != mates_.end();
+         ++it)
+    {
+      MatePtr mate = *it;
+      std::string desc = mate->getDescription();
+
+      std::string male_name = mate->male->link->GetName();
+      std::string female_name = mate->female->link->GetName();
+
+      // Look for all mates that match the link
+      if (male_name.compare(link->GetName()) == 0 || female_name.compare(link->GetName()) == 0)
+      {
+        if(req.suppress)
+        {
+          gzwarn << "Suppress Mate - found matching mate for: " << desc << std::endl;
+          mate->suppressMate(true);
+          res.suppressed = true;
+
+          found_link = true;
+        }
+        else
+        {
+          gzwarn << "Unsuppress Mate - found matching mate for: " << desc << std::endl;
+          mate->suppressMate(false);
+          res.suppressed = false;
+
+          found_link = true;
+        }
+      }
+    }
+
+    // If we found a link, service succeeded.
+    return found_link;
+  }
+
   void AssemblySoup::Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   {
     // Store the pointer to the model
     this->model_ = _parent;
     this->sdf_ = _sdf;
+
+    // Create a node handle for ros topics
+    ros::NodeHandle nh;
+    suppress_mates_srv_ = nh.advertiseService("suppress_mates", &AssemblySoup::SuppressMatesCallback, this);
+
+    // Subscribe to the suppress mates topic
 
     // Get TF configuration
     sdf::ElementPtr broadcast_elem = _sdf->GetElement("tf_world_frame");
@@ -60,7 +133,6 @@ namespace assembly_sim
       broadcast_tf_ = true;
 
       // set up publishers for visualization
-      ros::NodeHandle nh;
       male_mate_pub_ = nh.advertise<visualization_msgs::MarkerArray>("male_mate_points",1000);
       female_mate_pub_ = nh.advertise<visualization_msgs::MarkerArray>("female_mate_points",1000);
       wrenches_pub_ = nh.advertise<visualization_msgs::MarkerArray>("mate_wrenches",100);
@@ -129,7 +201,7 @@ namespace assembly_sim
           gzerr<<"ERROR: \""<<model<<"\" is not a valid model type"<<std::endl;
           return;
         }
-        mate_factories_[mate_model->type] = mate_factory; 
+        mate_factories_[mate_model->type] = mate_factory;
       }
 
       // Get the next atom element
@@ -386,11 +458,14 @@ namespace assembly_sim
       }
 
 #if 1
-      // Check if this mate is already scheduled to be updated
-      if(mate->needsUpdate()) {
-        //gzwarn<<"mate "<<mate->getDescription()<<" already scheduled."<<std::endl;
-        continue;
-      }
+// TODO: confirm that this step is now uncessary as the update is handled below on line 434
+//       checking for this update but not queing it can actually skip the update logic in the model
+//
+//      // Check if this mate is already scheduled to be updated
+//      if(mate->needsUpdate()) {
+//        //gzwarn<<"mate "<<mate->getDescription()<<" already scheduled."<<std::endl;
+//        continue;
+//      }
 
       // Queue any updates
       mate->queueUpdate();

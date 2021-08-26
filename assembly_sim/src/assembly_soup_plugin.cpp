@@ -60,7 +60,7 @@ namespace assembly_sim
     }
 
     // If the parent model is not the model this plugin is attached to, don't process
-    if(this->model_->GetName() != req.scoped_link[0])
+    if(this->model_->GetName() != req.scoped_link[0]) {
         gzerr<<"Root model name \""<<req.scoped_link[0]<<"\" is not the assembly sim model: \""<<this->model_->GetName()<<"\""<<std::endl;
         return false;
     }
@@ -81,8 +81,9 @@ namespace assembly_sim
         gzwarn << "ASSEMBLY SOUP: Failed to suppress mate with name " << req.scoped_link[req.scoped_link.size() -1] << std::endl;
         gzerr<<"Could not find model: "<<model<<std::endl;
         gzwarn << "Scope tree:" << std::endl;
-        for(auto &link_name : req.scoped_link)
+        for(auto &link_name : req.scoped_link) {
           gzwarn << "\tLink name: " << link_name << std::endl;
+        }
         return false;
       }
     }

@@ -48,13 +48,22 @@ namespace assembly_sim
 
   bool AssemblySoup::SuppressMatesCallback(assembly_msgs::SetMateSuppression::Request& req, assembly_msgs::SetMateSuppression::Response& res)
   {
+    gzmsg<<"Request to set suppression to "<<req.suppress<<" for link: "<<std::endl;
+    for(auto &name : req.scoped_link) {
+        gzmsg<<" - "<<name<<std::endl;
+    }
+
     // Must have at least a parent model and child link
-    if(req.scoped_link.size() < 2)
-      return false;
+    if(req.scoped_link.size() < 2) {
+        gzerr<<"Link path is length "<<req.scoped_link.size()<<" but at least one parent model is needed"<<std::endl;
+        return false;
+    }
 
     // If the parent model is not the model this plugin is attached to, don't process
-    if(this->model_->GetName().compare(req.scoped_link[0]) != 0)
-      return false;
+    if(this->model_->GetName().compare(req.scoped_link[0]) != 0) {
+        gzerr<<"Root model name \""<<req.scoped_link[0]<<"\" is not the assembly sim model: \""<<this->model_->GetName()<<"\""<<std::endl;
+        return false;
+    }
 
     // Save the top level model as the start
     gazebo::physics::BasePtr cur_model = model_;
@@ -67,8 +76,10 @@ namespace assembly_sim
       cur_model = cur_model->GetChild(model);
 
       // If this child doesn't exist, then its not a valid scope list
-      if(!cur_model)
-        return false;
+      if(!cur_model) {
+          gzerr<<"Could not find model: "<<model<<std::endl;
+          return false;
+      }
     }
 
     gazebo::physics::BasePtr link = cur_model;
@@ -107,6 +118,10 @@ namespace assembly_sim
           found_link = true;
         }
       }
+    }
+
+    if(!found_link) {
+        gzerr<<"Could not find link: "<<link->GetName()<<std::endl;
     }
 
     // If we found a link, service succeeded.

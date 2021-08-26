@@ -60,7 +60,7 @@ namespace assembly_sim
     }
 
     // If the parent model is not the model this plugin is attached to, don't process
-    if(this->model_->GetName().compare(req.scoped_link[0]) != 0) {
+    if(this->model_->GetName() != req.scoped_link[0])
         gzerr<<"Root model name \""<<req.scoped_link[0]<<"\" is not the assembly sim model: \""<<this->model_->GetName()<<"\""<<std::endl;
         return false;
     }
@@ -76,9 +76,14 @@ namespace assembly_sim
       cur_model = cur_model->GetChild(model);
 
       // If this child doesn't exist, then its not a valid scope list
-      if(!cur_model) {
-          gzerr<<"Could not find model: "<<model<<std::endl;
-          return false;
+      if(!cur_model)
+      {
+        gzwarn << "ASSEMBLY SOUP: Failed to suppress mate with name " << req.scoped_link[req.scoped_link.size() -1] << std::endl;
+        gzerr<<"Could not find model: "<<model<<std::endl;
+        gzwarn << "Scope tree:" << std::endl;
+        for(auto &link_name : req.scoped_link)
+          gzwarn << "\tLink name: " << link_name << std::endl;
+        return false;
       }
     }
 
@@ -99,7 +104,7 @@ namespace assembly_sim
       std::string female_name = mate->female->link->GetName();
 
       // Look for all mates that match the link
-      if (male_name.compare(link->GetName()) == 0 || female_name.compare(link->GetName()) == 0)
+      if (male_name == link->GetName() || female_name == link->GetName())
       {
         if(req.suppress)
         {
@@ -136,7 +141,7 @@ namespace assembly_sim
 
     // Create a node handle for ros topics
     ros::NodeHandle nh;
-    suppress_mates_srv_ = nh.advertiseService("suppress_mates", &AssemblySoup::SuppressMatesCallback, this);
+    suppress_mates_srv_ = nh.advertiseService("suppress_mate", &AssemblySoup::SuppressMatesCallback, this);
 
     // Subscribe to the suppress mates topic
 

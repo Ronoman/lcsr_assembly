@@ -21,7 +21,8 @@ namespace assembly_sim {
     joint(),
     gazebo_model(gazebo_model_),
     mated_symmetry(model->symmetries.end()),
-    mate_point_error(KDL::Vector(0,0,0),KDL::Vector(0,0,0))
+    mate_point_error(KDL::Vector(0,0,0),KDL::Vector(0,0,0)),
+    suppress_requested(false)
   {
     // Make sure male and female mate points have the same model
     assert(female_mate_point->model == male_mate_point->model);

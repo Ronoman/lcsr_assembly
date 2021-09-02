@@ -182,17 +182,7 @@ namespace assembly_sim {
 
     // Suppress function
     void suppressMate(bool suppress) {
-      if (suppress && state != Mate::SUPPRESSED)
-      {
-        this->requestUpdate(Mate::SUPPRESSED);
-        // gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
-      }
-      else if (!suppress && state == Mate::SUPPRESSED)
-      {
-        this->requestUpdate(Mate::UNMATED);
-        gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
-      }
-      return;
+        suppress_requested = suppress;
     }
 
     // Introspection
@@ -234,6 +224,9 @@ namespace assembly_sim {
     // Max erp
     double max_stop_erp;
     double max_erp;
+
+    // Asynchronous request that the mate be suppressed
+    bool suppress_requested;
   };
 
   // The model for a type of atom
@@ -500,9 +493,24 @@ namespace assembly_sim {
         return;
       }
 
-      // Don't do any logic this mate is suppressed
-      if(state == Mate::SUPPRESSED)
+      // Handle suppress request
+      if (suppress_requested && state != Mate::SUPPRESSED)
+      {
+        this->requestUpdate(Mate::SUPPRESSED);
+        gzwarn<<"Suppressing mate: "<<getDescription()<<std::endl;
         return;
+      }
+      else if (!suppress_requested && state == Mate::SUPPRESSED)
+      {
+        this->requestUpdate(Mate::UNMATED);
+        gzwarn<<"Reactivating mate: "<<getDescription()<<std::endl;
+        return;
+      }
+
+      // Don't do any logic this mate is suppressed
+      if(state == Mate::SUPPRESSED) {
+        return;
+      }
 
       KDL::Frame female_atom_frame;
       to_kdl(female_atom->link->WorldPose(), female_atom_frame);
@@ -582,7 +590,9 @@ namespace assembly_sim {
         return;
       }
 
-      switch(this->getUpdate()) {
+      State new_pending_state = this->getUpdate();
+
+      switch(new_pending_state) {
         case Mate::NONE:
           break;
 
@@ -608,7 +618,7 @@ namespace assembly_sim {
           } else if(state == Mate::SUPPRESSED)
           {
             gzwarn<<"> Unsuppressing: "<<getDescription()<<std::endl;
-            this->state = Mate::UNMATED;
+            this->state = new_pending_state;
           }
           break;
 

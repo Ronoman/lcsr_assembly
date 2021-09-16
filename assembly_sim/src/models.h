@@ -551,6 +551,8 @@ namespace assembly_sim {
           {
             // The mate points are beyond the detach threhold and should be demated
             gzwarn<<"> Request unmate "<<getDescription()<<std::endl;
+            gzwarn<<">    linear error: "<<twist_err.vel.Norm()<<std::endl;
+            gzwarn<<">   angular error: "<<twist_err.vel.Norm()<<std::endl;
             this->requestUpdate(Mate::UNMATED);
             break;
           } else if(
@@ -571,6 +573,8 @@ namespace assembly_sim {
           {
             // The mate points are within the attach threshold and should be mated
             gzwarn<<"> Request mate "<<getDescription()<<std::endl;
+            gzwarn<<">    linear error: "<<twist_err.vel.Norm()<<std::endl;
+            gzwarn<<">   angular error: "<<twist_err.vel.Norm()<<std::endl;
             this->mated_symmetry = it_sym;
             this->mate_error = twist_err;
             this->requestUpdate(Mate::MATED);

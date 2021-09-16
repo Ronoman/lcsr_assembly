@@ -461,8 +461,8 @@ namespace assembly_sim
 
       assembly_msgs::Mate mate_msg;
       mate_msg.description = mate->getDescription();
-      mate_msg.linear_error = mate->mate_point_error.vel.Norm();
-      mate_msg.angular_error =mate->mate_point_error.rot.Norm();
+      mate_msg.linear_error = mate->mate_error.vel.Norm();
+      mate_msg.angular_error = mate->mate_error.rot.Norm();
 
       if(publish_active_mates_ and mate->state == Mate::MATED) {
         mates_msg.female.push_back(mate->joint->GetParent()->GetScopedName());
@@ -471,7 +471,7 @@ namespace assembly_sim
         mates_msg.angular_error.push_back(mate_msg.angular_error);
 
         geometry_msgs::Quaternion symmetry_orientation;
-        tf::quaternionKDLToMsg((*(mate->mated_symmetry)).M, symmetry_orientation);
+        tf::quaternionKDLToMsg(mate->mated_symmetry->M, symmetry_orientation);
         mates_msg.symmetry.push_back(symmetry_orientation);
 
       } else if(publish_active_mates_ and mate_msg.linear_error < 0.03 and mate_msg.linear_error > 0.0) {
